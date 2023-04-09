@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Entity {
   name: string
@@ -13,7 +13,7 @@ export const entities: Entity[] =
       name: "Water",
       targetValue: 3.5,
       unit: "L",
-      quantities: [0.33, 0.5]
+      quantities: [1 / 3, 0.5]
     },
     {
       name: "Veg/Fruit",
@@ -42,13 +42,15 @@ export const entities: Entity[] =
   ]
 
 
-type TrackableValue = {
-  [index: string]: number
+export type EntityValue = {
+  [index: string]: {
+    quantity: number;
+    updated: string; // Always UTC
+  }
 }
 
-type TrackerState = {
-  values: TrackableValue;
-  lastUpdated?: Date;
+export type TrackerState = {
+  values: EntityValue;
 }
 
 const initialState: TrackerState = {
@@ -60,12 +62,26 @@ export const trackerSlice = createSlice(
     name: "tracker",
     initialState: initialState,
     reducers: {
-      addQuantity: (state, action) => {
-        const { entityName, quantity } = action.payload;
-        if (state.values[entityName] === undefined) {
-          state.values[entityName] = quantity;
-        } else {
-          state.values[entityName] += quantity;
+      addQuantity: {
+        reducer:
+          (state, action: PayloadAction<{ entityName: string, quantity: number, now: string }>) => {
+            const { entityName, quantity, now } = action.payload;
+            if (state.values[entityName] === undefined) {
+              state.values[entityName] = { quantity: quantity, updated: now }
+            } else {
+              state.values[entityName].quantity += quantity;
+              state.values[entityName].updated = now;
+            }
+          },
+        prepare: (entityName: string, quantity: number) => {
+          return {
+            payload: {
+              entityName,
+              quantity,
+              now: new Date().toISOString()
+              //now: (addDays(new Date(), -1)).toISOString()
+            }
+          }
         }
       }
     },
