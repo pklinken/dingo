@@ -1,34 +1,46 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-export interface ITrackable {
+export interface Entity {
   name: string
-  value: number
   targetValue: number
   unit: string
   quantities: number[]
 }
 
-type TrackerState = {
-  trackables: ITrackable[];
-}
-
-const initialState: TrackerState = {
-  trackables: [
+export const entities: Entity[] =
+  [
     {
       name: "Water",
-      value: 0,
       targetValue: 3.5,
       unit: "L",
       quantities: [0.33, 0.5]
     },
     {
       name: "Veg/Fruit",
-      value: 0,
       targetValue: 10,
       unit: "servings",
       quantities: [1]
     },
+    {
+      name: "Vit. D",
+      targetValue: 1,
+      unit: "pill",
+      quantities: [1]
+    }
   ]
+
+
+type TrackableValue = {
+  [index: string]: number
+}
+
+type TrackerState = {
+  values: TrackableValue;
+  lastUpdated?: Date;
+}
+
+const initialState: TrackerState = {
+  values: {},
 }
 
 export const trackerSlice = createSlice(
@@ -37,10 +49,11 @@ export const trackerSlice = createSlice(
     initialState: initialState,
     reducers: {
       addQuantity: (state, action) => {
-        const { trackableName, quantity } = action.payload;
-        const trackable = state.trackables.find(t => t.name === trackableName);
-        if (trackable) {
-          trackable.value += quantity;
+        const { entityName, quantity } = action.payload;
+        if (state.values[entityName] === undefined) {
+          state.values[entityName] = quantity;
+        } else {
+          state.values[entityName] += quantity;
         }
       }
     },
