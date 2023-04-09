@@ -22,9 +22,21 @@ export const entities: Entity[] =
       quantities: [1]
     },
     {
+      name: "Psyllium",
+      targetValue: 2,
+      unit: "dose",
+      quantities: [1]
+    },
+    {
       name: "Vit. D",
-      targetValue: 1,
+      targetValue: 0,
       unit: "pill",
+      quantities: [1]
+    },
+    {
+      name: "Omega 3",
+      targetValue: 0,
+      unit: "capsule",
       quantities: [1]
     }
   ]
