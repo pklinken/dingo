@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import { formatDistanceToNow, isSameDay, parseISO } from "date-fns";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { addQuantity, Entity, entities } from "./trackerSlice";
+import { trackerActions, Entity, entities } from "./trackerSlice";
 
 const ensureTwoDecimals = (n: number): string => {
   if (!Number.isInteger(n)) {
@@ -31,12 +31,19 @@ const Timestamp = (d: string): JSX.Element => {
 };
 
 const Trackable = (e: Entity): JSX.Element => {
-  const entityValue = useAppSelector((state) => state.tracker.values[e.name]);
+  const entityValues = useAppSelector((state) =>
+    state.tracker.events.filter(
+      (event) =>
+        event.entityName === e.name &&
+        isSameDay(new Date(), Date.parse(event.timestamp))
+    )
+  );
 
-  const { quantity, updated } =
-    entityValue && isSameDay(new Date(), Date.parse(entityValue.updated))
-      ? entityValue
-      : { quantity: 0, updated: undefined };
+  const quantity = entityValues.reduce((acc, event) => acc + event.quantity, 0);
+
+  const updated = entityValues.sort((a, b) => {
+    return Date.parse(b.timestamp) - Date.parse(a.timestamp);
+  })[0]?.timestamp;
 
   const dispatch = useAppDispatch();
 
@@ -50,7 +57,10 @@ const Trackable = (e: Entity): JSX.Element => {
           {ensureTwoDecimals(quantity)} {e.unit}
         </div>
         {e.quantities.map((q) => (
-          <div key={q} onClick={() => dispatch(addQuantity(e.name, q))}>
+          <div
+            key={q}
+            onClick={() => dispatch(trackerActions.entityChanged(e.name, q))}
+          >
             {Quantity(q)}
           </div>
         ))}

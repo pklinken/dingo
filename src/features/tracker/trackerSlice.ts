@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { addDays } from "date-fns";
 
 export interface Entity {
   name: string
@@ -38,23 +39,33 @@ export const entities: Entity[] =
       targetValue: 0,
       unit: "capsule",
       quantities: [1]
-    }
+    },
+    {
+      name: "Balancing exercise",
+      targetValue: 1,
+      unit: "session",
+      quantities: [1]
+    },
+    {
+      name: "Foot grab exercise",
+      targetValue: 1,
+      unit: "session",
+      quantities: [1]
+    },
   ]
 
-
-export type EntityValue = {
-  [index: string]: {
-    quantity: number;
-    updated: string; // Always UTC
-  }
+export type ChangeEvent = {
+  entityName: string;
+  quantity: number;
+  timestamp: string;
 }
 
 export type TrackerState = {
-  values: EntityValue;
+  events: ChangeEvent[]
 }
 
 const initialState: TrackerState = {
-  values: {},
+  events: []
 }
 
 export const trackerSlice = createSlice(
@@ -62,24 +73,20 @@ export const trackerSlice = createSlice(
     name: "tracker",
     initialState: initialState,
     reducers: {
-      addQuantity: {
+      entityChanged: {
         reducer:
           (state, action: PayloadAction<{ entityName: string, quantity: number, now: string }>) => {
             const { entityName, quantity, now } = action.payload;
-            if (state.values[entityName] === undefined) {
-              state.values[entityName] = { quantity: quantity, updated: now }
-            } else {
-              state.values[entityName].quantity += quantity;
-              state.values[entityName].updated = now;
-            }
-          },
+            state.events.push({ entityName, quantity, timestamp: now })
+          }
+        ,
         prepare: (entityName: string, quantity: number) => {
           return {
             payload: {
               entityName,
               quantity,
               now: new Date().toISOString()
-              //now: (addDays(new Date(), -1)).toISOString()
+              // now: (addDays(new Date(), -1)).toISOString()
             }
           }
         }
@@ -88,6 +95,6 @@ export const trackerSlice = createSlice(
   }
 );
 
-export const { addQuantity } = trackerSlice.actions;
+export const trackerActions = trackerSlice.actions;
 
 export default trackerSlice.reducer
