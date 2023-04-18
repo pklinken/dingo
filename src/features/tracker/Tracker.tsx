@@ -1,5 +1,6 @@
 import classNames from "classnames";
 import { formatDistanceToNow, isSameDay, parseISO } from "date-fns";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { trackerActions, Entity, entities } from "./trackerSlice";
 
@@ -21,7 +22,7 @@ const Quantity = (q: number): JSX.Element => {
 
 const Timestamp = (d: string): JSX.Element => {
   const date = parseISO(d);
-  const timePeriod = formatDistanceToNow(date);
+  const timePeriod = formatDistanceToNow(date, { includeSeconds: true });
 
   return (
     <span className="text-sm text-slate-300 text-left">
@@ -71,6 +72,15 @@ const Trackable = (e: Entity): JSX.Element => {
 };
 
 export function Tracker() {
+  const [_, setUpdateCounter] = useState(0);
+
+  useEffect(() => {
+    const forceUpdate = () => setUpdateCounter((r) => r + 1);
+    window.addEventListener("focus", forceUpdate);
+
+    return () => window.removeEventListener("focus", forceUpdate);
+  }, []);
+
   return (
     <div>
       <div className="text-4xl pb-8">Today</div>
