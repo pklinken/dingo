@@ -1,100 +1,115 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { addDays } from "date-fns";
+import { createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit";
+import { isSameDay } from "date-fns";
 
 export interface Entity {
-  name: string
-  targetValue: number
-  unit: string
-  quantities: number[]
+  name: string;
+  targetValue: number;
+  unit: string;
+  quantities: number[];
 }
 
-export const entities: Entity[] =
-  [
-    {
-      name: "Water",
-      targetValue: 3.5,
-      unit: "L",
-      quantities: [1 / 3, 0.5]
-    },
-    {
-      name: "Veg/Fruit",
-      targetValue: 10,
-      unit: "servings",
-      quantities: [1]
-    },
-    {
-      name: "Psyllium",
-      targetValue: 2,
-      unit: "dose",
-      quantities: [1]
-    },
-    {
-      name: "Vit. D",
-      targetValue: 0,
-      unit: "pill",
-      quantities: [1]
-    },
-    {
-      name: "Omega 3",
-      targetValue: 0,
-      unit: "capsule",
-      quantities: [1]
-    },
-    {
-      name: "Balancing exercise",
-      targetValue: 1,
-      unit: "session",
-      quantities: [1]
-    },
-    {
-      name: "Foot grab exercise",
-      targetValue: 1,
-      unit: "session",
-      quantities: [1]
-    },
-  ]
+export const entities: Entity[] = [
+  {
+    name: "Water",
+    targetValue: 3.5,
+    unit: "L",
+    quantities: [1 / 3, 0.5],
+  },
+  {
+    name: "Veg/Fruit",
+    targetValue: 10,
+    unit: "servings",
+    quantities: [1],
+  },
+  {
+    name: "Psyllium",
+    targetValue: 2,
+    unit: "dose",
+    quantities: [1],
+  },
+  {
+    name: "Vit. D",
+    targetValue: 0,
+    unit: "pill",
+    quantities: [1],
+  },
+  {
+    name: "Omega 3",
+    targetValue: 0,
+    unit: "capsule",
+    quantities: [1],
+  },
+  {
+    name: "Balancing exercise",
+    targetValue: 1,
+    unit: "session",
+    quantities: [1],
+  },
+  {
+    name: "Foot grab exercise",
+    targetValue: 1,
+    unit: "session",
+    quantities: [1],
+  },
+];
 
 export type ChangeEvent = {
+  key: string;
   entityName: string;
   quantity: number;
   timestamp: string;
-}
+};
 
 export type TrackerState = {
-  events: ChangeEvent[]
-}
+  events: ChangeEvent[];
+};
 
 const initialState: TrackerState = {
-  events: []
-}
+  events: [],
+};
 
-export const trackerSlice = createSlice(
-  {
-    name: "tracker",
-    initialState: initialState,
-    reducers: {
-      entityChanged: {
-        reducer:
-          (state, action: PayloadAction<{ entityName: string, quantity: number, now: string }>) => {
-            const { entityName, quantity, now } = action.payload;
-            state.events.push({ entityName, quantity, timestamp: now })
-          }
-        ,
-        prepare: (entityName: string, quantity: number) => {
-          return {
-            payload: {
-              entityName,
-              quantity,
-              now: new Date().toISOString()
-              // now: (addDays(new Date(), -1)).toISOString()
-            }
-          }
-        }
-      }
+export const trackerSlice = createSlice({
+  name: "tracker",
+  initialState: initialState,
+  reducers: {
+    entityChanged: {
+      reducer: (state, action: PayloadAction<ChangeEvent>) => {
+        state.events.push(action.payload);
+      },
+      prepare: (
+        entityName: string,
+        quantity: number
+      ): { payload: ChangeEvent } => {
+        return {
+          payload: {
+            key: nanoid(),
+            entityName,
+            quantity,
+            timestamp: new Date().toISOString(),
+            // timestamp: (addDays(new Date(), -1)).toISOString()
+          },
+        };
+      },
     },
-  }
-);
+    entityUndoLast: {
+      reducer: (state, action: PayloadAction<Date>) => {
+        const now = action.payload;
+
+        const lastEvent = state.events[state.events.length - 1];
+        if (isSameDay(now, Date.parse(lastEvent.timestamp))) state.events.pop();
+      },
+      prepare: () => ({ payload: new Date() }),
+    },
+  },
+});
 
 export const trackerActions = trackerSlice.actions;
 
-export default trackerSlice.reducer
+export default trackerSlice.reducer;
+
+// export const selectTrackerState = (state: RootState) => state.tracker;
+
+// export const selectEvents = (state: TrackerState) => state.events;
+
+export const selectEventsOnSameDay = (events: ChangeEvent[], date: Date) =>
+  events.filter((event) => isSameDay(date, Date.parse(event.timestamp)));

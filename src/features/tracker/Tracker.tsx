@@ -1,8 +1,13 @@
 import classNames from "classnames";
-import { formatDistanceToNow, isSameDay, parseISO } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { trackerActions, Entity, entities } from "./trackerSlice";
+import {
+  trackerActions,
+  Entity,
+  entities,
+  selectEventsOnSameDay,
+} from "./trackerSlice";
 
 const ensureTwoDecimals = (n: number): string => {
   if (!Number.isInteger(n)) {
@@ -32,12 +37,10 @@ const Timestamp = (d: string): JSX.Element => {
 };
 
 const Trackable = (e: Entity): JSX.Element => {
-  const entityValues = useAppSelector((state) =>
-    state.tracker.events.filter(
-      (event) =>
-        event.entityName === e.name &&
-        isSameDay(new Date(), Date.parse(event.timestamp))
-    )
+  const events = useAppSelector((state) => state.tracker.events);
+
+  const entityValues = selectEventsOnSameDay(events, new Date()).filter(
+    (event) => event.entityName === e.name
   );
 
   const quantity = entityValues.reduce((acc, event) => acc + event.quantity, 0);
@@ -71,8 +74,25 @@ const Trackable = (e: Entity): JSX.Element => {
   );
 };
 
+const UndoButton = () => {
+  const dispatch = useAppDispatch();
+
+  return (
+    <button
+      className="rounded-full bg-gray-300 py-1 px-4"
+      onClick={() => dispatch(trackerActions.entityUndoLast())}
+    >
+      Undo
+    </button>
+  );
+};
+
 export function Tracker() {
   const [_, setUpdateCounter] = useState(0);
+
+  const events = useAppSelector((state) => state.tracker.events);
+
+  const changeEvents = selectEventsOnSameDay(events, new Date());
 
   useEffect(() => {
     const forceUpdate = () => setUpdateCounter((r) => r + 1);
@@ -85,6 +105,7 @@ export function Tracker() {
     <div>
       <div className="text-4xl pb-8">Today</div>
       {entities.map(Trackable)}
+      {changeEvents.length > 0 && <UndoButton />}
     </div>
   );
 }
