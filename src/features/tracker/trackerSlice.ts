@@ -22,6 +22,18 @@ export const entities: Entity[] = [
     quantities: [1],
   },
   {
+    name: "Say something nice to yourself",
+    targetValue: 10,
+    unit: "times",
+    quantities: [1],
+  },
+  {
+    name: "Celebrate a win",
+    targetValue: 10,
+    unit: "times",
+    quantities: [1],
+  },
+  {
     name: "Psyllium",
     targetValue: 2,
     unit: "dose",
@@ -37,6 +49,12 @@ export const entities: Entity[] = [
     name: "Omega 3",
     targetValue: 0,
     unit: "capsule",
+    quantities: [1],
+  },
+  {
+    name: "Zinc",
+    targetValue: 1,
+    unit: "pill",
     quantities: [1],
   },
   {
