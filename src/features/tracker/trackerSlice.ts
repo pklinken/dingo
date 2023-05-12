@@ -59,10 +59,16 @@ export const entities: Entity[] = [
   },
   {
     name: "Breath light",
-    targetValue: 2,
-    unit: "session",
+    targetValue: 3,
+    unit: "10m session",
     quantities: [1],
   },
+  {
+    name: "Practice self-acceptance",
+    targetValue: 1,
+    unit: "session",
+    quantities: [1],
+  }
   {
     name: "Balancing exercise",
     targetValue: 1,
